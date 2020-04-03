@@ -1,0 +1,32 @@
+{
+  "name": "@mp-arthur/miniprogram",
+  "version": "0.0.1",
+  "description": "Arthur for wechat mini program",
+  "homepage": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "Yayun.Xiong",
+  "license": "MIT",
+  "scripts": {
+    "watch": "tsc -w",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "commit": "git-cz"
+  },
+  "dependencies": {
+    "tslib": "^1.11.1"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
+    "commitizen": "^4.0.3",
+    "cz-conventional-changelog": "^3.1.0",
+    "husky": "^4.2.3",
+    "miniprogram-api-typings": "^2.10.3",
+    "prettier": "^2.0.2",
+    "tslint": "^6.1.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.8.3"
+  }
+}
