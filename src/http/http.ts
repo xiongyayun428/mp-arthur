@@ -1,23 +1,35 @@
 import { RequestOption } from "./option";
 import { HttpParams, DefaultHttpParams } from "./params";
-import { ClientInfo } from '../utils/client-info';
+import { Store } from '../utils/store';
 
+/**
+ * HTTP网络请求
+ */
 export class Http {
-  private _clientInfo: ClientInfo;
-  private parms: HttpParams;
+  private store = new Store();
+  private _debug: boolean = false;
+  // 还存在问题
+  public requestTask: WechatMiniprogram.RequestTask | undefined;
+
+  set debug(isDebug: boolean) {
+    this._debug = isDebug;
+  }
+
+  get debug(): boolean {
+    return this._debug;
+  }
 
   /**
    * 网络请求
-   * @param _parms 参数
+   * @param _params 参数
    */
-  constructor(private _parms?: HttpParams) {
-    if (!_parms) {
-      this.parms = new DefaultHttpParams();
-    } else {
-      this.parms = _parms;
-    }
-    this._clientInfo = new ClientInfo();
-  }
+  constructor(private params: HttpParams = new DefaultHttpParams(),
+              private showToastParams: any = {
+                mask: true,
+                duration: 3000,
+                icon: 'none',
+              }
+  ) { }
 
   request(options: RequestOption): Promise<any> {
     if (options.loading === undefined) {
@@ -34,55 +46,69 @@ export class Http {
       }
       const _this = this
       let _url = options?.url
-      if (this.parms.withBaseURL) {
-        _url = this.reasonableUrl(this.parms.baseURL, options?.url)
+      if (this.params.withBaseURL) {
+        _url = this.reasonableUrl(this.params.baseURL, options?.url)
       }
-      // let header = options?.header;
-      // this._clientInfo.systemInfo.
+      const systemInfo = this.store.getSystemInfo();
+      const clientInfo = {
+        "clientType": "mp",
+        // 设备型号
+        "model": systemInfo.model,
+        // 操作系统及版本
+        "os": systemInfo.system,
+        // 微信版本号
+        "version": systemInfo.version,
+        // 屏幕
+        "screen": systemInfo.screenWidth + "px * " + systemInfo.screenHeight + "px",
+        "channel": "miniprogram"
+      }
+      const header = Object.assign({
+        "Client-Info": JSON.stringify(clientInfo)
+      }, options?.header);
 
       // 发送服务
-      wx.request({
+      _this.requestTask = wx.request({
         url: _url,
         data: options?.data,
-        header: options?.header,
+        header,
+        timeout: options?.timeout,
         method: options?.method,
         dataType: options?.dataType,
         responseType: options?.responseType,
-        success: (result) => {
+        success: (result) => { // 请求成功
+          if (this.debug) {
+            console.log("==>" + options?.method + " " + _url + "\n<==" + JSON.stringify(result));
+          }
           const res: any = result.data
-          if (_this.parms.successCode.indexOf(res[_this.parms.codeFieldName]) < 0) {
+          // 业务成功
+          if (_this.params.successCode.indexOf(res[_this.params.codeFieldName]) >= 0) {
             if (options?.loading) {
               wx.hideLoading()
             }
-            resolve(res[_this.parms.dataFieldName])
-          } else {
+            resolve(res[_this.params.dataFieldName])
+          } else { // 业务失败
             if (options?.toast) {
-              wx.showToast({
-                mask: true,
-                title: res[_this.parms.msgFieldName],
-                icon: 'none',
-              })
+              wx.showToast(Object.assign({title: res[_this.params.msgFieldName]}, this.showToastParams))
             } else {
               if (options?.loading) {
                 wx.hideLoading()
               }
             }
+            reject(res)
           }
         },
-        fail: (e) => {
+        fail: (e) => { // 请求失败
           let msg = e.errMsg
           if (msg === 'request:fail timeout') {
             msg = '请求超时，请稍后处理！'
           }
-          wx.showToast({
-            mask: true,
-            title: msg,
-            icon: 'none',
-          })
+          if (options?.toast) {
+            wx.showToast(Object.assign({title: msg}, this.showToastParams))
+          }
           reject({ code: -1, msg })
         },
         complete: () => {
-          console.log('complete!')
+          // console.log('complete!')
         },
       })
     })
@@ -206,27 +232,3 @@ export class Http {
     return urlPrefix + '/' + urlSuffix
   }
 }
-
-
-// /**
-//  * 小程序的promise没有finally方法，自己扩展下
-//  */
-// Promise.prototype.finally = function (callback) {
-//   var Promise = this.constructor;
-//   return this.then(
-//     (value) => {
-//       Promise.resolve(callback()).then(
-//         () =>{
-//           return value;
-//         }
-//       );
-//     },
-//     (reason) => {
-//       Promise.resolve(callback()).then(
-//         function () {
-//           throw reason;
-//         }
-//       );
-//     }
-//   );
-// }
