@@ -1,32 +1,43 @@
 {
   "name": "@mp-arthur/miniprogram",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Arthur for wechat mini program",
-  "homepage": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "author": "Yayun.Xiong",
-  "license": "MIT",
   "scripts": {
     "watch": "tsc -w",
-    "build": "tsc",
+    "build": "gulp && tsc",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json",
     "commit": "git-cz"
   },
-  "dependencies": {
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiongyayun428/mp-arthur.git"
   },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xiongyayun428/mp-arthur/issues"
+  },
+  "homepage": "https://github.com/xiongyayun428/mp-arthur/#readme",
+  "author": {
+    "name": "Yayun.Xiong",
+    "email": "xiongyayun428@163.com"
+  },
+  "dependencies": {},
   "devDependencies": {
     "@commitlint/cli": "^8.3.5",
     "@commitlint/config-conventional": "^8.3.4",
     "commitizen": "^4.0.3",
     "cz-conventional-changelog": "^3.1.0",
+    "gulp": "^4.0.2",
+    "gulp-clean": "^0.4.0",
     "husky": "^4.2.3",
     "miniprogram-api-typings": "^2.10.3",
     "prettier": "^2.0.2",
+    "tslib": "^1.11.1",
     "tslint": "^6.1.1",
     "tslint-config-prettier": "^1.18.0",
-    "tslib": "^1.11.1",
     "typescript": "^3.8.3"
   }
 }

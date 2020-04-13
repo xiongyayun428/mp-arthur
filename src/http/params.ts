@@ -1,3 +1,6 @@
+/**
+ * 请求参数
+ */
 export interface HttpParams {
   withBaseURL: boolean;
   baseURL: string;
@@ -7,7 +10,9 @@ export interface HttpParams {
   msgFieldName: string;
   dataFieldName: string;
 }
-
+/**
+ * 请求默认参数
+ */
 export class DefaultHttpParams implements HttpParams {
   baseURL = "";
   withBaseURL = false;
