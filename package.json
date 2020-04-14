@@ -1,9 +1,9 @@
 {
   "name": "@mp-arthur/miniprogram",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Arthur for wechat mini program",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "watch": "tsc -w",
     "build": "gulp && tsc",

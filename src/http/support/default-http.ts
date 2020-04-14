@@ -1,6 +1,5 @@
 import { Http } from '../http';
 import { Handler } from '../handler';
-import { Store } from '../../utils/store';
 import { HttpParams, DefaultHttpParams } from '../params';
 import { RequestOption } from '../option';
 import { DefaultHandler } from './default-handler';
@@ -21,15 +20,12 @@ export class DefaultHttp implements Http {
   public set handlers(value: Handler[]) {
     this._handlers = value;
   }
-
   public set handler(value: Handler) {
     this._handlers.push(value);
   }
 
   /**
    * 设置网络请求的debug模式 true: 打印请求日志
-   *
-   * @memberof Http
    */
   set debug(isDebug: boolean) {
     this._debug = isDebug;
@@ -37,9 +33,6 @@ export class DefaultHttp implements Http {
 
   /**
    * 获取网络请求的debug模式
-   *
-   * @type {boolean}
-   * @memberof Http
    */
   get debug(): boolean {
     return this._debug;
@@ -47,7 +40,7 @@ export class DefaultHttp implements Http {
 
   /**
    * 网络请求
-   * @param _params 参数
+   * @param params 参数
    */
   constructor(private params: HttpParams = new DefaultHttpParams()) { }
 
@@ -55,20 +48,20 @@ export class DefaultHttp implements Http {
    * 网络请求
    * @param option 网络请求参数
    */
-  request(option: RequestOption): Promise<any> {
-    if (option.loading === undefined) {
-      option.loading = true;
-    }
-    if (option.toast === undefined) {
-      option.toast = true;
-    }
+  request(_option: RequestOption): Promise<any> {
+    // 将全局参数和本次请求参数合并，优先级：本次请求参数 > 全局参数
+    const option: RequestOption = Object.assign({}, this.params, _option);
     if (this.handlers?.length > 0) {
       for (const handler of this.handlers) {
-        if (handler.preHandler && !handler.preHandler(option, this.params)) {
+        if (handler.preHandler && !handler.preHandler(option)) {
           break
         }
       }
     }
+    return this.fetch(option);
+  }
+
+  private fetch(option: RequestOption): Promise<any> {
     return new Promise((resolve, reject) => {
       const _this = this
       // 发送服务
@@ -85,21 +78,39 @@ export class DefaultHttp implements Http {
             console.log("==>" + option?.method + " " + option.url + "\n<==" + JSON.stringify(result));
           }
           const res: any = result.data
-          // 业务成功
-          if (_this.params.successCode.indexOf(res[_this.params.codeFieldName]) >= 0) {
-            this.successHandler(res[_this.params.dataFieldName], option);
-            resolve(res[_this.params.dataFieldName])
+          if (!option.successCode || !option.codeFieldName || !option.dataFieldName) { // 配置存在问题
+            console.error("请检查配置[successCode, codeFieldName, dataFieldName]");
+            this.failHandler(res, option)
+            reject(res)
+          } else if (option.successCode.indexOf(res[option.codeFieldName]) >= 0) { // 业务成功
+            this.successHandler(res[option.dataFieldName], option);
+            resolve(res[option.dataFieldName])
           } else { // 业务失败
             this.failHandler(res, option)
             reject(res)
           }
         },
         fail: (res: WechatMiniprogram.GeneralCallbackResult) => { // 请求失败
+          // TODO 重试
+          if (option.failRetry && option.failRetry.retry-- > 0) {
+            console.log("retry：" + (option.failRetry.retry + 1));
+            const delay = option.failRetry.delay;
+            // if (delay > 0) {
+            // }
+            return this.fetch(option).then(resolve, reject);
+          }
           if (res.errMsg === 'request:fail timeout') {
             res.errMsg = '请求超时，请稍后处理！'
           }
           this.failHandler(res, option)
-          reject({ code: -1, msg: res.errMsg })
+          const sysError: any = {};
+          if (option.codeFieldName) {
+            sysError[option.codeFieldName] = -1;
+          }
+          if (option.msgFieldName) {
+            sysError[option.msgFieldName] = res.errMsg;
+          }
+          reject(sysError)
         },
         complete: (res: WechatMiniprogram.GeneralCallbackResult) => {
           if (this.handlers?.length > 0) {
@@ -141,7 +152,7 @@ export class DefaultHttp implements Http {
   private failHandler(res: any, option: RequestOption) {
     if (this.handlers?.length > 0) {
       for (const handler of this.handlers) {
-        if (handler.failHandler && !handler.failHandler(res, option, this.params)) {
+        if (handler.failHandler && !handler.failHandler(res, option)) {
           break
         }
       }

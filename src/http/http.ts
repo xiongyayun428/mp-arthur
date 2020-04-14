@@ -1,3 +1,5 @@
+import { RequestOption } from "./option";
+
 /**
  * HTTP网络请求
  *
@@ -9,6 +11,12 @@ export interface Http {
    * 是否debug模式
    */
   readonly debug: boolean
+
+  /**
+   * 网络请求
+   * @param option 请求参数
+   */
+  request(option: RequestOption): Promise<any>
 
   /**
    * GET网络请求

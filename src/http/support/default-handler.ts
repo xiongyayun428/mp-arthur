@@ -1,6 +1,5 @@
 import { Handler } from "../handler";
 import { RequestOption } from "../option";
-import { HttpParams } from "../params";
 import { Store } from "../../utils/store";
 
 export class DefaultHandler implements Handler {
@@ -12,14 +11,14 @@ export class DefaultHandler implements Handler {
     icon: 'none',
   }) { }
 
-  preHandler?(option: RequestOption, params: HttpParams): boolean {
+  preHandler?(option: RequestOption): boolean {
     if (option.loading) {
       wx.showLoading({
         title: '加载中...',
       })
     }
-    if (params.withBaseURL) {
-      option.url = this.reasonableUrl(params.baseURL, option?.url)
+    if (option.withBaseURL) {
+      option.url = this.reasonableUrl(option.baseURL, option?.url)
     }
     const systemInfo = this.store.getSystemInfo();
     const clientInfo = {
@@ -40,9 +39,9 @@ export class DefaultHandler implements Handler {
     return true;
   }
 
-  failHandler?(res: WechatMiniprogram.GeneralCallbackResult | WechatMiniprogram.RequestSuccessCallbackResult | any, option: RequestOption, params: HttpParams): boolean {
+  failHandler?(res: WechatMiniprogram.GeneralCallbackResult | WechatMiniprogram.RequestSuccessCallbackResult | any, option: RequestOption): boolean {
     if (option?.toast) {
-      wx.showToast(Object.assign({title: res.errMsg || res[params.msgFieldName]}, this.showToastParams))
+      wx.showToast(Object.assign({title: res.errMsg || (option.msgFieldName && res[option.msgFieldName])}, this.showToastParams))
     } else {
       if (option?.loading) {
         wx.hideLoading()
@@ -58,7 +57,7 @@ export class DefaultHandler implements Handler {
     return true;
   }
 
-  private reasonableUrl(baseUrl: string, url: string) {
+  private reasonableUrl(baseUrl: string = "", url: string = "") {
     if (url.indexOf("://") < 0) {
       // 不是http://和https://和ws://之类的开头
       return this.mergeUrl(baseUrl, url);
