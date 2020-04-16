@@ -29,7 +29,13 @@ export interface HttpParams {
   /**
    * 请求时是否有loading效果
    */
-  loading?: boolean;
+  loading?: boolean | {
+    title: string
+    /**
+     * 延迟的时间，函数的调用会在该延迟之后发生，单位 ms。
+     */
+    delay: number;
+  };
   /**
    * 请求失败时是否需要toast提示错误信息
    */
@@ -39,13 +45,13 @@ export interface HttpParams {
    */
   failRetry?: {
     /**
-     * 重试`次数`或重试`回调函数`
+     * 当fail时的重试次数
      */
     retry: number;
     /**
      * 延迟的时间，函数的调用会在该延迟之后发生，单位 ms。
      */
-    delay: number;
+    delay?: number;
   }
 
 }
@@ -59,12 +65,13 @@ export class DefaultHttpParams implements HttpParams {
   codeFieldName = "rtnCode";
   msgFieldName = "rtnMsg";
   dataFieldName = "rtnData";
-  loading = true;
+  loading = {
+    title: "加载中...",
+    delay: 100
+  };
   toast = true;
   failRetry = {
-    retry: 2,
-    delay: 0
+    retry: 0,
+    delay: 100
   }
 }
-
-type RetryCallback = (res: any) => void

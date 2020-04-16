@@ -4,6 +4,7 @@ import { Store } from "../../utils/store";
 
 export class DefaultHandler implements Handler {
   private store = new Store();
+  private loadingTimeout: number = 0;
 
   constructor(private showToastParams: any = {
     mask: true,
@@ -12,10 +13,22 @@ export class DefaultHandler implements Handler {
   }) { }
 
   preHandler?(option: RequestOption): boolean {
-    if (option.loading) {
-      wx.showLoading({
-        title: '加载中...',
-      })
+    if (!!option.loading) {
+      clearTimeout(this.loadingTimeout);
+      if (typeof option.loading === 'object') {
+        const loading = option.loading;
+        this.loadingTimeout = setTimeout(() => {
+          wx.showLoading({
+            title: loading.title || '加载中...',
+          })
+        }, loading.delay || 100);
+      } else {
+        this.loadingTimeout = setTimeout(() => {
+          wx.showLoading({
+            title: '加载中...',
+          })
+        }, 100);
+      }
     }
     if (option.withBaseURL) {
       option.url = this.reasonableUrl(option.baseURL, option?.url)
@@ -43,7 +56,7 @@ export class DefaultHandler implements Handler {
     if (option?.toast) {
       wx.showToast(Object.assign({title: res.errMsg || (option.msgFieldName && res[option.msgFieldName])}, this.showToastParams))
     } else {
-      if (option?.loading) {
+      if (!!option?.loading) {
         wx.hideLoading()
       }
     }
@@ -51,9 +64,14 @@ export class DefaultHandler implements Handler {
   }
 
   successHandler?(result: WechatMiniprogram.RequestSuccessCallbackResult, option?: RequestOption): boolean {
-    if (option?.loading) {
+    if (!!option?.loading) {
       wx.hideLoading()
     }
+    return true;
+  }
+
+  postHandler?(resp: WechatMiniprogram.GeneralCallbackResult): boolean {
+    clearTimeout(this.loadingTimeout);
     return true;
   }
 

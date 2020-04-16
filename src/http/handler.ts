@@ -1,4 +1,4 @@
-import { RequestOption } from './option'
+import { RequestOption, Option } from './option'
 
 /**
  * 处理程序
@@ -12,7 +12,7 @@ export interface Handler {
    * @param option
    * @param params
    */
-  preHandler?(option: RequestOption): boolean;
+  preHandler?(option: Option): boolean;
   /**
    * 交易后置处理
    * @param resp
@@ -23,7 +23,7 @@ export interface Handler {
    * @param result
    * @param option
    */
-  successHandler?(result: WechatMiniprogram.RequestSuccessCallbackResult, option?: RequestOption): boolean;
+  successHandler?(result: WechatMiniprogram.RequestSuccessCallbackResult, option?: Option): boolean;
   /**
    * 交易失败
    * @param res
@@ -31,6 +31,6 @@ export interface Handler {
    */
   failHandler?(
     res: WechatMiniprogram.GeneralCallbackResult | WechatMiniprogram.RequestSuccessCallbackResult | any,
-    option: RequestOption
+    option: Option
   ): boolean;
 }

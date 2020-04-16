@@ -1,6 +1,6 @@
 {
   "name": "@mp-arthur/miniprogram",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Arthur for wechat mini program",
   "main": "index.js",
   "types": "index.d.ts",
