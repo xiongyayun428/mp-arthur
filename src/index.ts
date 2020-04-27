@@ -6,6 +6,4 @@ export * from './http/option';
 export * from './http/params';
 export * from './http/router';
 
-export * from './utils/store';
-
-import './utils/promise.finally';
+export * from './utils';
